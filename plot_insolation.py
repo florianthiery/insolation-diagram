@@ -123,17 +123,21 @@ ax.scatter(
     insol.iloc[ecc_max],
     age.iloc[ecc_max],
     marker="x",
-    s=70,
+    s=160,
+    linewidths=2.0,
     color=COL_ECC,
+    zorder=5,
     label="Ecc maxima",
 )
 ax.scatter(
     insol.iloc[ecc_min],
     age.iloc[ecc_min],
     marker="x",
-    s=70,
+    s=160,
+    linewidths=2.0,
     color=COL_ECC,
     alpha=0.45,
+    zorder=5,
     label="Ecc minima",
 )
 
@@ -141,17 +145,23 @@ ax.scatter(
     insol.iloc[obl_max],
     age.iloc[obl_max],
     marker="D",
-    s=70,
+    s=160,
+    linewidths=1.5,
+    edgecolors="white",
     color=COL_OBL,
+    zorder=5,
     label="Obl maxima",
 )
 ax.scatter(
     insol.iloc[obl_min],
     age.iloc[obl_min],
     marker="D",
-    s=70,
+    s=160,
+    linewidths=1.5,
+    edgecolors="white",
     color=COL_OBL,
     alpha=0.45,
+    zorder=5,
     label="Obl minima",
 )
 
@@ -159,17 +169,23 @@ ax.scatter(
     insol.iloc[prec_max],
     age.iloc[prec_max],
     marker="o",
-    s=55,
+    s=120,
+    linewidths=1.2,
+    edgecolors="white",
     color=COL_PREC,
+    zorder=5,
     label="Prec index maxima",
 )
 ax.scatter(
     insol.iloc[prec_min],
     age.iloc[prec_min],
     marker="o",
-    s=55,
+    s=120,
+    linewidths=1.2,
+    edgecolors="white",
     color=COL_PREC,
     alpha=0.45,
+    zorder=5,
     label="Prec index minima",
 )
 
