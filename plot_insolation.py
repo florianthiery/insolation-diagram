@@ -2,7 +2,7 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from matplotlib.ticker import MultipleLocator
+from matplotlib.ticker import MultipleLocator, FuncFormatter
 from scipy.signal import argrelextrema
 
 # -------------------------------------------------
@@ -199,20 +199,21 @@ ax.xaxis.set_label_position("top")
 
 # Raster wie Corchia
 ax.yaxis.set_major_locator(MultipleLocator(10_000))
+ax.yaxis.set_major_formatter(FuncFormatter(lambda x, pos: f"{int(x/1000)}"))
 ax.grid(axis="y", which="major", color="#cccccc", linewidth=1)
 
 ax.yaxis.set_minor_locator(MultipleLocator(2_000))
 ax.tick_params(axis="y", which="minor", length=4, width=0.8)
 
-# Labels (fett, großer Stil)
+# Labels (fett, größer Stil)
 ax.set_xlabel(
     "Insolation 65°N July [W/m²]", fontsize=24, labelpad=12, fontweight="bold"
 )
-ax.set_ylabel("Age [yr b2k]", fontsize=24, labelpad=12, fontweight="bold")
+ax.set_ylabel("Age [kyr b2k]", fontsize=24, labelpad=12, fontweight="bold")
 
-# Tickgrößen
-ax.tick_params(axis="x", labelsize=20)
-ax.tick_params(axis="y", labelsize=20)
+# Tickgrößen (wie im EPICA-Skript)
+ax.tick_params(axis="x", labelsize=26)
+ax.tick_params(axis="y", labelsize=26)
 
 # Legende (optional, du kannst sie auch auskommentieren)
 ax.legend(loc="lower left", bbox_to_anchor=(0.005, 0.005), fontsize=13, frameon=True)
