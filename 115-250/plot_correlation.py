@@ -61,7 +61,7 @@ def scatter_plot(
 
     # Colorbar: 128 at TOP, 220 at BOTTOM, and colors: 128 yellow -> 220 purple
     cbar = fig.colorbar(sc, ax=ax, pad=0.02)
-    cbar.set_label("Age [ka b2k]", fontsize=20, fontweight="bold")
+    cbar.set_label("Age [kyr b2k]", fontsize=20, fontweight="bold")
     cbar.ax.invert_yaxis()
     cbar.ax.tick_params(labelsize=16)
 
