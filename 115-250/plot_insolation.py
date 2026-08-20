@@ -209,7 +209,7 @@ ax.tick_params(axis="y", which="minor", length=4, width=0.8)
 ax.set_xlabel(
     "Insolation 65°N July [W/m²]", fontsize=24, labelpad=12, fontweight="bold"
 )
-ax.set_ylabel("Age [kyr b2k]", fontsize=24, labelpad=12, fontweight="bold")
+ax.set_ylabel("Age [ka]", fontsize=24, labelpad=12, fontweight="bold")
 
 # Tickgrößen (wie im EPICA-Skript)
 ax.tick_params(axis="x", labelsize=26)
