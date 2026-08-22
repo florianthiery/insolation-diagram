@@ -1,0 +1,7 @@
+{
+"type": "FeatureCollection",
+"name": "maare",
+"features": [
+{ "type": "Feature", "properties": { "name": "Walsdorfer Maar", "pid": "https://kulturdb.de/einobjekt.php?id=4064", "nummer": "WD1" }, "geometry": { "type": "Point", "coordinates": [ 6.711587, 50.271915 ] } }
+]
+}

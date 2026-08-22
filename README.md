@@ -37,20 +37,37 @@ so it can be regenerated or deleted at any time.
 ├── main.py                  # entry point: builds everything
 ├── prepare_data.py          # Orbital_param.tab -> orbital_param.csv
 ├── orbital_data.py          # shared reader for the PANGAEA .tab file
+├── insolation_site.py       # insolation at an arbitrary latitude (Berger 1978)
 ├── svg_compose.py           # SVG composition used by plot_overall.py
 ├── requirements.txt
 ├── Orbital_param.tab        # canonical input: raw PANGAEA download
 ├── orbital_param.csv        # derived from the .tab file, not read by anything
+├── maare.geojson            # site coordinates (Walsdorfer Maar)
 ├── 115-250/                 # age window 115–250 ka b2k
 │   ├── plot_insolation.py   # -> panel (A)
 │   ├── plot_correlation.py  # -> panels (B)–(D)
 │   ├── plot_overall.py      # -> composed figure
 │   └── *.jpg, *.svg         # outputs (see below)
-└── 128-220/                 # age window 128–220 ka b2k, identical layout
+├── 128-220/                 # age window 128–220 ka b2k, identical layout
+└── 115-250-WM/              # 115–250 ka b2k at the Walsdorfer Maar latitude
+    ├── prepare_data_wm.py   # -> orbital_param_wm.tab / .csv (site insolation)
+    ├── plot_insolation.py   # -> panel (A)
+    ├── plot_correlation.py  # -> panels (B)–(D)
+    ├── plot_overall.py      # -> composed figure
+    └── plot_compare_latitudes.py  # -> 65°N vs. site comparison
 ```
 
-The two age directories contain the same three scripts; they differ only in the
+`115-250` and `128-220` contain the same three scripts and differ only in the
 age window set in the configuration block at the top of each script.
+
+`115-250-WM` produces the same figures for 50.272° N, the latitude of the
+Walsdorfer Maar, instead of the 65° N reference latitude. The orbital elements
+are properties of the Earth's orbit and are used unchanged; only the insolation
+is recomputed, with the formula of Berger (1978) in `insolation_site.py`. The
+convention behind the published `EXI` column (true solar longitude λ = 120°,
+solar constant 1360 W/m², ϖ = OMEGA + 180°) was determined by fitting that
+formula to `EXI`, which it then reproduces to an RMS of 0.005 W/m². That check
+runs on every build and aborts if the deviation exceeds 0.05 W/m².
 
 ## Requirements
 
@@ -72,8 +89,9 @@ about the figures.
 
 ```
 python main.py                 # both age windows
-python main.py --115-250       # only the 115–250 ka b2k figures
-python main.py --128-220       # only the 128–220 ka b2k figures
+python main.py --115-250       # only the 115–250 ka b2k figures, 65° N
+python main.py --128-220       # only the 128–220 ka b2k figures, 65° N
+python main.py --115-250-WM    # only the Walsdorfer Maar latitude
 python main.py --list          # list what would be run, build nothing
 python main.py --no-data       # skip prepare_data.py
 ```
@@ -102,7 +120,8 @@ Written into the age directory, each as `.svg` (vector) and `.jpg` (raster):
 | `corr_insolation_vs_ecc` | (B) | insolation against eccentricity, coloured by age | 4989 × 3903 px |
 | `corr_insolation_vs_obliquity` | (C) | insolation against obliquity, coloured by age | 4989 × 3903 px |
 | `corr_insolation_vs_precession_index` | (D) | insolation against the precession index *e*·sin(ω), coloured by age | 4989 × 3903 px |
-| `overall_115-250` / `overall_128-220` | (A)–(D) | all four panels on one canvas | 4029 × 5000 px |
+| `overall_115-250` / `overall_128-220` / `overall_115-250-WM` | (A)–(D) | all four panels on one canvas | 4029 × 5000 px |
+| `compare_insolation_65N_vs_wm` (`115-250-WM` only) | – | 65° N and site curve, and their difference against obliquity | 5626 × 4058 px |
 
 ## How the composed figure is built
 
@@ -133,6 +152,8 @@ all following ones.
   that correction; `Prec` is unaffected either way, as it is not used.
 * The precession index is computed as *e*·sin(ω) from the `ECC` and `OMEGA`
   columns.
+* Site coordinates are read from `maare.geojson`, never hard-coded — swapping
+  that file is enough to run the same analysis for a different location.
 * Extrema in panel (A) are detected in the orbital **parameters**, not in the
   insolation curve, and then plotted at the corresponding position on the
   insolation curve. Sensitivity is controlled by `EXTREMA_ORDER`.

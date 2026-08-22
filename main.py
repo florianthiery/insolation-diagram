@@ -10,8 +10,9 @@ range and in this order:
 Usage
 -----
     python main.py                 # both age ranges
-    python main.py --115-250       # only 115-250 ka b2k
-    python main.py --128-220       # only 128-220 ka b2k
+    python main.py --115-250       # only 115-250 ka b2k, 65 deg N
+    python main.py --128-220       # only 128-220 ka b2k, 65 deg N
+    python main.py --115-250-WM    # only the Walsdorfer Maar latitude
     python main.py --list          # show what would be run
     python main.py --no-data       # skip the CSV derivation step
 """
@@ -32,15 +33,21 @@ ROOT = Path(__file__).resolve().parent
 # Run once in the repository root, before the age ranges
 ROOT_SCRIPTS = ("prepare_data.py",)
 
-# Age ranges in ka b2k; each is a directory in the repository root
-RANGES = ("115-250", "128-220")
-
 # Executed in this order - plot_overall.py composes the output of the other two
 SCRIPTS = (
     "plot_insolation.py",
     "plot_correlation.py",
     "plot_overall.py",
 )
+
+# One directory per age range / latitude, with the scripts it needs.
+# 115-250-WM recomputes the insolation for the Walsdorfer Maar latitude first
+# and adds a comparison against the 65 deg N reference curve at the end.
+RANGES = {
+    "115-250": SCRIPTS,
+    "128-220": SCRIPTS,
+    "115-250-WM": ("prepare_data_wm.py",) + SCRIPTS + ("plot_compare_latitudes.py",),
+}
 
 
 # -------------------------------------------------
@@ -101,7 +108,7 @@ def main() -> None:
         for script in root_scripts:
             print(script)
         for range_name in selected:
-            for script in SCRIPTS:
+            for script in RANGES[range_name]:
                 print(f"{range_name}/{script}")
         return
 
@@ -109,7 +116,7 @@ def main() -> None:
     for script in root_scripts:
         run_script(script)
     for range_name in selected:
-        for script in SCRIPTS:
+        for script in RANGES[range_name]:
             run_script(script, range_name)
 
     print(
