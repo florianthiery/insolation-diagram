@@ -1,4 +1,7 @@
 import os
+import sys
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -10,10 +13,14 @@ from scipy.signal import argrelextrema
 # -------------------------------------------------
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
+# gemeinsamer Reader im Repo-Root
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+import orbital_data  # noqa: E402
+
 # -------------------------------------------------
 # INPUT
 # -------------------------------------------------
-csv_file = "orbital_param.csv"  # liegt im gleichen Ordner
+data_file = orbital_data.TAB_FILE  # Orbital_param.tab im Repo-Root
 AGE_MIN_YR_B2K = 128_000
 AGE_MAX_YR_B2K = 220_000
 
@@ -29,22 +36,6 @@ COL_PREC = "#2ca02c"  # grün
 EXTREMA_ORDER = 3
 
 
-# -------------------------------------------------
-# Helper: Spaltennamen normalisieren
-# -------------------------------------------------
-def norm_col(x: str) -> str:
-    if x is None:
-        return ""
-    return str(x).replace("\ufeff", "").replace("\u00a0", " ").strip()
-
-
-def robust_read_table(path: str) -> pd.DataFrame:
-    # sep=None sniffed automatisch (CSV/TSV), comment="#" ignoriert Metadaten-Zeilen
-    df = pd.read_csv(path, sep=None, engine="python", comment="#", encoding="utf-8-sig")
-    df.columns = [norm_col(c) for c in df.columns]
-    return df
-
-
 def get_extrema_idx(series: pd.Series, order: int = 3):
     arr = np.asarray(series, dtype=float)
     max_idx = argrelextrema(arr, np.greater, order=order)[0]
@@ -55,24 +46,15 @@ def get_extrema_idx(series: pd.Series, order: int = 3):
 # -------------------------------------------------
 # Load
 # -------------------------------------------------
-df = robust_read_table(csv_file)
+df = orbital_data.read_pangaea_tab(data_file)
 print("Spalten im DataFrame nach dem Einlesen:", df.columns.tolist())
 
-# Erwartete Spalten in deinem Export
-col_age = "Age"  # ka BP
-col_ecc = "ECC"
-col_obl = "OBL"
-col_omega = "OMEGA"
-col_insol = "EXI"  # Insolation 65°N July [W/m²]
-
-needed = {col_age, col_ecc, col_obl, col_omega, col_insol}
-missing = [c for c in needed if c not in df.columns]
-if missing:
-    raise ValueError(f"Fehlende Spalten: {missing}\nGefunden: {df.columns.tolist()}")
-
-# numerisch machen
-for c in [col_age, col_ecc, col_obl, col_omega, col_insol]:
-    df[c] = pd.to_numeric(df[c], errors="coerce")
+# Spaltennamen (Kurzform, siehe orbital_data)
+col_age = orbital_data.COL_AGE  # ka BP
+col_ecc = orbital_data.COL_ECC
+col_obl = orbital_data.COL_OBL  # deg
+col_omega = orbital_data.COL_OMEGA
+col_insol = orbital_data.COL_INSOL  # Insolation 65°N July [W/m²]
 
 # -------------------------------------------------
 # Alter umrechnen: ka BP -> yr b2k
@@ -92,9 +74,8 @@ age = df["Age_yr_b2k"]
 insol = df[col_insol]
 ecc = df[col_ecc]
 
-# OBL ggf. in Tausendstel-Grad -> Grad (22340..24582 -> 22.340..24.582)
-obl_raw = df[col_obl].copy()
-obl = obl_raw / 1000.0 if obl_raw.max() > 100 else obl_raw
+# OBL steht in der .tab bereits in Grad
+obl = df[col_obl]
 
 # Precession index: e*sin(omega)
 omega_rad = np.deg2rad(df[col_omega])

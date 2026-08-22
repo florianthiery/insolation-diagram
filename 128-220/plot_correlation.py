@@ -1,14 +1,20 @@
 import os
+import sys
+from pathlib import Path
+
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 from matplotlib.colors import Normalize
 
+# shared reader in the repository root
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+import orbital_data  # noqa: E402
+
 # ------------------------------------------------------------
 # SETTINGS  (NOW IN ka b2k)
 # ------------------------------------------------------------
-DATA_FILE = "orbital_param.csv"
+DATA_FILE = orbital_data.TAB_FILE  # Orbital_param.tab in the repository root
 
 AGE_MIN_B2K, AGE_MAX_B2K = 128, 220  # <-- ka b2k (NOT BP)
 SHIFT_YEARS = 50  # BP -> b2k = +50 years
@@ -16,12 +22,6 @@ SHIFT_KA = SHIFT_YEARS / 1000.0  # 0.05 ka
 
 DPI_JPG = 600
 CMAP = "viridis_r"  # low=yellow, high=purple (we invert axis for 128 top)
-
-
-def robust_read_table(path: str) -> pd.DataFrame:
-    df = pd.read_csv(path, sep=None, engine="python", comment="#")
-    df.columns = df.columns.str.strip()
-    return df
 
 
 def export_figure(fig, out_base):
@@ -89,17 +89,14 @@ def scatter_plot(
 
 def main():
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
-    df = robust_read_table(DATA_FILE)
+    df = orbital_data.read_pangaea_tab(DATA_FILE)
 
-    # Column names (as in your file)
-    col_age_bp = "Age"  # Age column is ka BP in your CSV
-    col_ecc = "ECC"
-    col_obl = "OBL"
-    col_omega = "OMEGA"
-    col_insol = "EXI"
-
-    for c in [col_age_bp, col_ecc, col_obl, col_omega, col_insol]:
-        df[c] = pd.to_numeric(df[c], errors="coerce")
+    # Column names (short form, see orbital_data)
+    col_age_bp = orbital_data.COL_AGE  # Age column is ka BP in the source table
+    col_ecc = orbital_data.COL_ECC
+    col_obl = orbital_data.COL_OBL  # deg
+    col_omega = orbital_data.COL_OMEGA
+    col_insol = orbital_data.COL_INSOL
 
     # Convert filter window from b2k -> BP (because the file is BP)
     age_min_bp = AGE_MIN_B2K - SHIFT_KA
@@ -114,9 +111,8 @@ def main():
     ecc = sub[col_ecc]
     insol = sub[col_insol]
 
-    # Obliquity scaling fix (22340..24582 -> 22.340..24.582 deg)
-    obl_raw = sub[col_obl].copy()
-    obl = obl_raw / 1000.0 if obl_raw.max() > 100 else obl_raw
+    # Obliquity is already in degrees in the .tab file
+    obl = sub[col_obl]
 
     # Precession index: e * sin(omega)
     omega_rad = np.deg2rad(sub[col_omega])
