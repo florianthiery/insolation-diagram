@@ -1,5 +1,124 @@
 # insolation-diagram
 
-Berger, A; Loutre, Marie-France (1999): Parameters of the Earths orbit for the last 5 Million years in 1 kyr resolution [dataset]. PANGAEA, https://doi.org/10.1594/PANGAEA.56040, Supplement to: Berger, A; Loutre, M-F (1991): Insolation values for the climate of the last 10 million of years. Quaternary Science Reviews, 10(4), 297-317, https://doi.org/10.1016/0277-3791(91)90033-Q
+Figures of the orbital forcing (65°N July insolation, eccentricity, obliquity,
+precession index) for two age windows of the late Middle Pleistocene, drawn from
+the Berger & Loutre (1991, 1999) astronomical solution.
 
-* https://doi.pangaea.de/10.1594/PANGAEA.56040
+Each age window is produced twice: as four stand-alone figures and as one
+composed multi-panel figure that puts them side by side.
+
+## Data source
+
+Berger, A. & Loutre, Marie-France (1999): *Parameters of the Earths orbit for the
+last 5 Million years in 1 kyr resolution* [dataset]. PANGAEA,
+<https://doi.org/10.1594/PANGAEA.56040>
+
+Supplement to: Berger, A. & Loutre, M.-F. (1991): Insolation values for the
+climate of the last 10 million of years. *Quaternary Science Reviews*, 10(4),
+297–317, <https://doi.org/10.1016/0277-3791(91)90033-Q>
+
+* PANGAEA landing page: <https://doi.pangaea.de/10.1594/PANGAEA.56040>
+
+`Orbital_param.tab` is the unmodified PANGAEA download (tab-separated, with the
+PANGAEA metadata header). `orbital_param.csv` in each age directory is the same
+table as plain CSV, covering the full 0–5000 ka BP range; the scripts cut out
+the age window they need.
+
+## Repository structure
+
+```
+.
+├── main.py                  # entry point: builds everything
+├── svg_compose.py           # SVG composition used by plot_overall.py
+├── requirements.txt
+├── Orbital_param.tab        # raw PANGAEA download
+├── 115-250/                 # age window 115–250 ka b2k
+│   ├── orbital_param.csv    # input table
+│   ├── plot_insolation.py   # -> panel (A)
+│   ├── plot_correlation.py  # -> panels (B)–(D)
+│   ├── plot_overall.py      # -> composed figure
+│   └── *.jpg, *.svg         # outputs (see below)
+└── 128-220/                 # age window 128–220 ka b2k, identical layout
+```
+
+The two age directories contain the same three scripts; they differ only in the
+age window set in the configuration block at the top of each script.
+
+## Requirements
+
+Python 3.10 or newer, plus:
+
+```
+pip install -r requirements.txt
+```
+
+`matplotlib`, `numpy`, `pandas` and `scipy` are used for the figures themselves;
+`pymupdf` and `pillow` are only needed by `plot_overall.py`, which rasterises the
+composed SVG to JPG.
+
+## Running
+
+From the repository root:
+
+```
+python main.py                 # both age windows
+python main.py --115-250       # only the 115–250 ka b2k figures
+python main.py --128-220       # only the 128–220 ka b2k figures
+python main.py --list          # list what would be run, build nothing
+```
+
+Passing both flags is the same as passing none. The scripts can also be run
+individually from inside an age directory:
+
+```
+cd 115-250
+python plot_insolation.py
+python plot_correlation.py
+python plot_overall.py
+```
+
+Order matters: `plot_overall.py` composes the SVGs written by the other two and
+stops with an error message if one of them is missing. Every run overwrites its
+outputs in place.
+
+## Outputs
+
+Written into the age directory, each as `.svg` (vector) and `.jpg` (raster):
+
+| File | Panel | Content | JPG size |
+| --- | --- | --- | --- |
+| `insolation_vs_age_orbital_extrema` | (A) | 65°N July insolation against age, with the maxima and minima of eccentricity, obliquity and precession index marked at their age position on the curve | 944 × 2436 px |
+| `corr_insolation_vs_ecc` | (B) | insolation against eccentricity, coloured by age | 4989 × 3903 px |
+| `corr_insolation_vs_obliquity` | (C) | insolation against obliquity, coloured by age | 4989 × 3903 px |
+| `corr_insolation_vs_precession_index` | (D) | insolation against the precession index *e*·sin(ω), coloured by age | 4989 × 3903 px |
+| `overall_115-250` / `overall_128-220` | (A)–(D) | all four panels on one canvas | 4029 × 5000 px |
+
+## How the composed figure is built
+
+`plot_overall.py` does not redraw anything. It places the four stand-alone SVGs
+as vector graphics on a millimetre canvas, adds the panel labels and rasterises
+the result — replacing the manual Inkscape step this figure used to require.
+
+The layout is defined in the configuration block of `plot_overall.py`: panel (A)
+is scaled to the full canvas height of 640 mm, panels (B)–(D) to a row height of
+200 mm with 20 mm between rows, the right-hand column starting at *x* = 260 mm.
+The canvas width follows from the panels, so a different matplotlib version
+changing the tight bounding box of a panel shifts nothing. The JPG is rendered at
+198.4375 dpi, which gives the same 4029 × 5000 px as the earlier manual export.
+
+Panel identifiers are prefixed while composing (`svg_compose.py`), because
+matplotlib reuses element ids such as `DejaVuSans-30` in every figure; without
+prefixing, the glyphs and clip paths of the first panel would be referenced by
+all following ones.
+
+## Conventions
+
+* All ages are given in **ka b2k** (before 2000 CE). The PANGAEA table is ka BP
+  (before 1950 CE); the scripts add the 50-year offset when reading it.
+* Obliquity is stored in thousandths of a degree in the source table and is
+  divided by 1000 on read.
+* The precession index is computed as *e*·sin(ω) from the `ECC` and `OMEGA`
+  columns.
+* Extrema in panel (A) are detected in the orbital **parameters**, not in the
+  insolation curve, and then plotted at the corresponding position on the
+  insolation curve. Sensitivity is controlled by `EXTREMA_ORDER`.
